@@ -55,7 +55,7 @@ async function main() {
 
   // Super Administrator
   const email = (process.env.SEED_ADMIN_EMAIL || "admin@example.com").toLowerCase();
-  const password = process.env.SEED_ADMIN_PASSWORD || "ChangeMe!2026";
+  const password = process.env.SEED_ADMIN_PASSWORD || "ChangeMe!2026"; 
   const existing = await db.collection("users").findOne({ email });
   let adminId: ObjectId;
   if (existing) {

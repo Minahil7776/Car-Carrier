@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { ShieldCheck, GitBranch, ScrollText } from "lucide-react";
+import { ShieldCheck, GitBranch, ScrollText, } from "lucide-react";
+import Link from "next/link";
 import { LoginForm } from "@/components/login-form";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { Logo } from "@/components/ui/logo";
@@ -62,7 +63,11 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             <p className="mt-8 text-center text-sm text-muted">
               Can&apos;t sign in? Ask your head office administrator to reset your access.
             </p>
+            <p className="mt-8 text-center text-sm text-muted">
+              Don't have an account? <Link href="/signup" className="font-medium text-brand hover:underline">Sign up</Link>
+            </p>
           </div>
+          
         </div>
       </section>
     </main>
