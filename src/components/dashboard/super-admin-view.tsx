@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { Building2, ClipboardCheck, GitBranch, Users } from "lucide-react";
 import type { SuperAdminData } from "@/lib/dashboard-data";
 import { officeStatusMeta } from "@/lib/utils";
@@ -19,7 +20,7 @@ export function SuperAdminView({ data }: { data: SuperAdminData }) {
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <StatCard label="Pending registrations" value={kpis.pending} note={kpis.pending ? "Waiting for your review" : "Nothing waiting"} icon={ClipboardCheck} attention={kpis.pending > 0} />
+        <StatCard href="/dashboard/registrations" label="Pending registrations" value={kpis.pending} note={kpis.pending ? "Waiting for your review" : "Nothing waiting"} icon={ClipboardCheck} attention={kpis.pending > 0} />
         <StatCard label="Organizations" value={kpis.organizations} note="Registered head offices" icon={Building2} />
         <StatCard label="Branches" value={kpis.branches} note="Across all organizations" icon={GitBranch} />
         <StatCard label="Users" value={kpis.users} note="Active and suspended accounts" icon={Users} />
@@ -43,8 +44,8 @@ export function SuperAdminView({ data }: { data: SuperAdminData }) {
           <OrgTree rows={data.organizations} />
         </Section>
         <div className="grid gap-5 lg:col-span-2 lg:grid-rows-[auto_1fr]">
-          <Section title="Review queue" description="Oldest requests first">
-            <RegistrationList rows={data.pending} emptyBody="New registrations and branch requests will appear here." />
+          <Section title="Review queue" description="Oldest requests first" action={<Link href="/dashboard/registrations" className="text-sm font-medium text-brand hover:underline">View all</Link>}>
+            <RegistrationList rows={data.pending} linkBase="/dashboard/registrations" emptyBody="New registrations and branch requests will appear here." />
           </Section>
           <Section title="Recent activity">
             <ActivityFeed items={data.activity} />

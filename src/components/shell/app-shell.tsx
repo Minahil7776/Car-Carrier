@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Bell, Building2, ChevronsLeft, ChevronsRight, GitBranch, LayoutDashboard, LogOut, Menu, ScrollText, Search, ShieldCheck, Users, X,
+  Bell, Building2, ChevronsLeft, ClipboardCheck, ChevronsRight, GitBranch, LayoutDashboard, LogOut, Menu, ScrollText, Search, ShieldCheck, Users, X,
 } from "lucide-react";
 import { logout, markNotificationsRead } from "@/app/actions";
 import { cn, timeAgo } from "@/lib/utils";
@@ -31,6 +31,7 @@ function navFor(scope: ShellUser["scope"]): NavItem[] {
   const dash: NavItem = { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, ready: true };
   if (scope === "system")
     return [dash,
+      { label: "Registrations", href: "/dashboard/registrations", icon: ClipboardCheck, ready: true },
       { label: "Organizations", href: "/dashboard/organizations", icon: Building2, ready: false },
       { label: "Branches", href: "/dashboard/branches", icon: GitBranch, ready: false },
       { label: "Users", href: "/dashboard/users", icon: Users, ready: false },
@@ -81,7 +82,7 @@ export function AppShell({ user, notifications, children }: { user: ShellUser; n
       <nav aria-label="Main" className="flex-1 space-y-0.5 px-3">
         {nav.map((item) => {
           const Icon = item.icon;
-          const active = item.ready && pathname === item.href;
+          const active = item.ready && (item.href === "/dashboard" ? pathname === item.href : pathname.startsWith(item.href));
           const base = cn("group relative flex h-10 items-center gap-3 rounded-lg text-sm font-medium", mini ? "justify-center" : "px-3");
           if (!item.ready)
             return (
@@ -137,7 +138,7 @@ export function AppShell({ user, notifications, children }: { user: ShellUser; n
           <nav aria-label="Breadcrumb" className="hidden min-w-0 items-center gap-2 text-sm sm:flex">
             <span className="truncate text-muted">{user.officeName ?? "System"}</span>
             <span className="text-faint" aria-hidden>/</span>
-            <span className="font-medium">Dashboard</span>
+            <span className="font-medium">{nav.find((n) => n.ready && (n.href === "/dashboard" ? pathname === n.href : pathname.startsWith(n.href)))?.label ?? "Dashboard"}</span>
           </nav>
           <div className="flex-1" />
           <button onClick={() => setPalette(true)} className="hidden h-9 w-64 items-center gap-2 rounded-control border border-line bg-surface px-3 text-sm text-faint transition-colors hover:border-faint md:flex">
