@@ -32,6 +32,14 @@ export interface OfficeDoc {
   code: string; // HO-000001 or BR-LHR-001
   name: string;
   legalName?: string;
+  ntn?: string;
+  salesTaxNumber?: string;
+  companyRegNumber?: string;
+  registeredAddress?: string;
+  operationalAddress?: string;
+  officePhone?: string;
+  officeEmail?: string;
+  website?: string;
   type: OfficeType;
   parentId?: ObjectId | null; // set for branches
   city: string;

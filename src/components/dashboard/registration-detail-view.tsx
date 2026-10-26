@@ -35,22 +35,42 @@ export function RegistrationDetailView({ data }: { data: RegDetail }) {
             <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
               <Item label="Company name" value={data.officeName} />
               <Item label="Registered legal name" value={data.legalName} />
-              <Item label="City" value={data.city} />
+              <Item label="Office type" value={data.officeType === "head" ? "Head Office" : data.officeType} />
               <Item label="NTN" value={data.ntn} mono />
+              <Item label="Sales tax number" value={data.salesTaxNumber} mono />
+              <Item label="Company registration number" value={data.companyRegNumber} mono />
+              <Item label="Registered address" value={data.registeredAddress} />
+              <Item label="Operational address" value={data.operationalAddress} />
+              <Item label="City" value={data.city} />
+              <Item label="Province" value={data.province} />
+              <Item label="Country" value={data.country} />
+              <Item label="Office phone" value={data.officePhone} />
+              <Item label="Office email" value={data.officeEmail} />
+              <Item label="Website" value={data.officeWebsite} />
             </dl>
           </Section>
           <Section title="Applicant" description="Becomes the administrator when approved">
             <dl className="grid gap-x-6 gap-y-4 sm:grid-cols-2">
               <Item label="Full name" value={data.applicantName} />
+              <Item label="Designation" value={data.designation} />
               <Item label="Mobile" value={data.applicantPhone} />
               <Item label="Email" value={data.applicantEmail} />
             </dl>
           </Section>
           <Section title="Documents">
-            {data.documentsCount > 0 ? (
-              <p className="flex items-center gap-2 text-sm"><FileText className="size-4 text-faint" aria-hidden /> {data.documentsCount} documents uploaded</p>
+            {data.documents.length > 0 ? (
+              <ul className="divide-y divide-line">
+                {data.documents.map((d) => (
+                  <li key={d.id} className="flex items-center gap-3 py-2.5 first:pt-0 last:pb-0">
+                    <FileText className="size-4 shrink-0 text-faint" aria-hidden />
+                    <div className="min-w-0 flex-1"><p className="text-sm font-medium">{d.label}</p><p className="truncate text-xs text-muted">{d.name} ({d.size < 1048576 ? `${Math.max(1, Math.round(d.size / 1024))} KB` : `${(d.size / 1048576).toFixed(1)} MB`})</p></div>
+                    <a href={`/api/registrations/documents/${d.id}`} target="_blank" rel="noopener" className="text-sm font-medium text-brand hover:underline">View</a>
+                    <a href={`/api/registrations/documents/${d.id}?download=1`} className="text-sm font-medium text-muted hover:text-ink">Download</a>
+                  </li>
+                ))}
+              </ul>
             ) : (
-              <Empty title="No documents uploaded" body="Use Request documents to tell the applicant what to provide. File upload is a later module." />
+              <Empty title="No documents uploaded" body="Use Request documents to tell the applicant what to provide." />
             )}
           </Section>
           <Section title="Verification history">

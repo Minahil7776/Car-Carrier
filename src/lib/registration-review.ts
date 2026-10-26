@@ -81,7 +81,10 @@ export async function decideRegistration(input: {
 
     await offices.insertOne({
       _id: officeId, code, name: reg.officeName, legalName: reg.legalName ?? undefined, ntn: reg.ntn ?? undefined,
-      type: "head", parentId: null, city: reg.city, country: "Pakistan", status: "active",
+      type: "head", parentId: null, city: reg.city, province: reg.province ?? undefined, country: "Pakistan", status: "active",
+      salesTaxNumber: reg.salesTaxNumber ?? undefined, companyRegNumber: reg.companyRegNumber ?? undefined,
+      registeredAddress: reg.registeredAddress ?? undefined, operationalAddress: reg.operationalAddress ?? undefined,
+      officePhone: reg.officePhone ?? undefined, officeEmail: reg.officeEmail ?? undefined, website: reg.officeWebsite ?? undefined,
       subscription: { expiresAt: new Date(now.getTime() + trialDays * 86_400_000) }, createdAt: now,
     });
     const userId = new ObjectId();

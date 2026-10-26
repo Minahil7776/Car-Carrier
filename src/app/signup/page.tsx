@@ -4,16 +4,19 @@ import { SignupForm } from "@/components/signup-form";
 import { ThemeToggle } from "@/components/shell/theme-toggle";
 import { Logo } from "@/components/ui/logo";
 import { CarrierScene } from "@/components/ui/carrier-scene";
+import { createDraftToken } from "@/lib/signup-draft";
 
 export const metadata: Metadata = { title: "Register your company" };
+export const dynamic = "force-dynamic"; // a fresh upload token per visit
 
 const steps = [
-  ["Send your details", "Tell us about your company and who will administer it."],
+  ["Send your details", "Tell us about your company, who will administer it, and upload your documents."],
   ["We review the request", "The system administrator checks your details and may ask for documents."],
   ["Sign in and add branches", "Once approved you become the head office administrator."],
 ];
 
-export default function SignupPage() {
+export default async function SignupPage() {
+  const uploadToken = await createDraftToken();
   return (
     <main className="grid min-h-dvh lg:grid-cols-[1fr_1.05fr]">
       <section className="relative hidden overflow-hidden bg-rail text-white lg:flex lg:flex-col lg:justify-between lg:p-12">
@@ -39,10 +42,10 @@ export default function SignupPage() {
           <ThemeToggle />
         </div>
         <div className="flex flex-1 items-center justify-center px-5 pb-16 sm:px-8">
-          <div className="w-full max-w-[460px] animate-rise">
+          <div className="w-full max-w-[560px] animate-rise">
             <h2 className="text-2xl font-semibold tracking-tight">Create your company account</h2>
             <p className="mb-8 mt-1.5 text-sm text-muted">Your request is reviewed before the account goes live.</p>
-            <SignupForm />
+            <SignupForm uploadToken={uploadToken} />
             <p className="mt-8 text-center text-sm text-muted">
               Already registered? <Link href="/login" className="font-medium text-brand hover:underline">Sign in</Link>
             </p>
