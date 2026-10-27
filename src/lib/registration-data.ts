@@ -35,10 +35,10 @@ export interface RegDetail extends RegListRow {
   officeEmail: string | null;
   officeWebsite: string | null;
   designation: string | null;
-  documents: { id: string; label: string; name: string; size: number }[];
+  documents: { id: string; docType: string; label: string; name: string; size: number }[];
   reviewedAt: string | null;
   reviewRemarks: string | null;
-  history: { at: string; by: string; action: "approved" | "rejected" | "info_requested"; remarks: string | null }[];
+  history: { at: string; by: string; action: "approved" | "rejected" | "info_requested" | "edited" | "document_added" | "document_removed"; remarks: string | null }[];
 }
 
 export async function listRegistrations(filter: RegFilter) {
@@ -104,7 +104,7 @@ export async function getRegistrationDetail(id: string): Promise<RegDetail | nul
     officeEmail: r.officeEmail ?? null,
     officeWebsite: r.officeWebsite ?? null,
     designation: r.designation ?? null,
-    documents: (r.documents ?? []).map((d: { fileId: ObjectId; docType: string; name: string; size: number }) => ({ id: d.fileId.toString(), label: docLabel(d.docType), name: d.name, size: d.size })),
+    documents: (r.documents ?? []).map((d: { fileId: ObjectId; docType: string; name: string; size: number }) => ({ id: d.fileId.toString(), docType: d.docType, label: docLabel(d.docType), name: d.name, size: d.size })),
     history: (r.history ?? []).map((h: { at: Date; by: string; action: RegDetail["history"][number]["action"]; remarks?: string | null }) => ({
       at: new Date(h.at).toISOString(),
       by: h.by,

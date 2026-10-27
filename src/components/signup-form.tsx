@@ -2,30 +2,18 @@
 
 import Link from "next/link";
 import { startTransition, useActionState, useEffect, useMemo, useRef, useState } from "react";
-import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, ChevronDown, Eye, EyeOff, Loader2 } from "lucide-react";
+import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { signup, type SignupState } from "@/app/signup/actions";
-import { DESIGNATIONS, MIN_DOCUMENTS, OFFICE_TYPES, DOCUMENT_TYPES } from "@/lib/signup-config";
-import { GEO, PROVINCES } from "@/lib/pakistan-geo";
+import { DESIGNATIONS, MIN_DOCUMENTS, DOCUMENT_TYPES } from "@/lib/signup-config";
 import { accountSchema, companySchema, fieldErrors } from "@/lib/signup-schema";
 import { cn } from "@/lib/utils";
+import { Field, SelectBox, inputProps } from "@/components/ui/form-field";
+import { CompanyFields } from "./company-fields";
 import { DocumentsStep, useDocumentUploads } from "./signup-documents";
 
 const STEPS = ["Company", "Your account", "Documents"] as const;
 const COMPANY_FIELDS = Object.keys(companySchema.shape);
 const ACCOUNT_FIELDS = Object.keys(accountSchema.shape);
-
-function Field({ id, label, hint, error, optional, children }: { id: string; label: string; hint?: string; error?: string; optional?: boolean; children: React.ReactNode }) {
-  return (
-    <div className="space-y-1.5">
-      <label htmlFor={id} className="flex items-baseline justify-between text-sm font-medium">
-        {label}
-        {optional && <span className="text-xs font-normal text-faint">Optional</span>}
-      </label>
-      {children}
-      {error ? <p id={`${id}-err`} className="text-xs text-bad">{error}</p> : hint ? <p className="text-xs text-muted">{hint}</p> : null}
-    </div>
-  );
-}
 
 function strength(p: string) {
   let s = 0;
@@ -42,10 +30,12 @@ export function SignupForm({ uploadToken }: { uploadToken: string }) {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [show, setShow] = useState(false);
   const [pw, setPw] = useState("");
-  const [province, setProvince] = useState("");
-  const [city, setCity] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
-  const uploads = useDocumentUploads(uploadToken);
+  const uploads = useDocumentUploads({
+    url: "/api/signup/documents",
+    token: uploadToken,
+    deleteUrl: (id) => `/api/signup/documents?id=${id}&token=${encodeURIComponent(uploadToken)}`,
+  });
   const score = useMemo(() => strength(pw), [pw]);
 
   // Server-side errors land beside the right field and take the user back to the right step.
@@ -116,16 +106,8 @@ export function SignupForm({ uploadToken }: { uploadToken: string }) {
     );
   }
 
-  const p = (k: string) => ({ id: k, name: k, className: cn("input", errors[k] && "border-bad focus:border-bad focus:ring-bad/25"), "aria-invalid": errors[k] ? true : undefined, "aria-describedby": errors[k] ? `${k}-err` : undefined });
-  const select = (k: string, options: readonly string[] | readonly { value: string; label: string }[], placeholder?: string, extra: React.SelectHTMLAttributes<HTMLSelectElement> = {}) => (
-    <div className="relative">
-      <select {...p(k)} {...extra} className={cn(p(k).className, "appearance-none pr-9", extra.className)}>
-        {placeholder && <option value="">{placeholder}</option>}
-        {options.map((o) => typeof o === "string" ? <option key={o} value={o}>{o}</option> : <option key={o.value} value={o.value}>{o.label}</option>)}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-3 top-1/2 size-4 -translate-y-1/2 text-faint" aria-hidden />
-    </div>
-  );
+  const p = (k: string) => inputProps(errors, k);
+  const select = (k: string, options: readonly string[], placeholder?: string) => <SelectBox name={k} errors={errors} options={options} placeholder={placeholder} />;
 
   return (
     <form ref={formRef} onSubmit={onSubmit} onInput={clearError} noValidate className="space-y-5">
@@ -150,38 +132,7 @@ export function SignupForm({ uploadToken }: { uploadToken: string }) {
 
       {/* Every step stays mounted, so values and uploads survive moving back and forth. */}
       <div className={cn("space-y-4", step !== 1 && "hidden")}>
-        <Field id="officeName" label="Head office name" error={errors.officeName}>
-          <input {...p("officeName")} autoComplete="organization" placeholder="ABC Car Carriers" />
-        </Field>
-        <Field id="legalName" label="Registered legal name" optional error={errors.legalName}>
-          <input {...p("legalName")} placeholder="ABC Car Carriers (Pvt) Ltd" />
-        </Field>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="officeType" label="Office type" error={errors.officeType}>{select("officeType", OFFICE_TYPES, undefined, { defaultValue: OFFICE_TYPES[0].value })}</Field>
-          <Field id="ntn" label="NTN" error={errors.ntn}><input {...p("ntn")} inputMode="numeric" placeholder="1234567-8" /></Field>
-          <Field id="salesTaxNumber" label="Sales tax number" optional error={errors.salesTaxNumber}><input {...p("salesTaxNumber")} /></Field>
-          <Field id="companyRegNumber" label="Company registration number" optional error={errors.companyRegNumber}><input {...p("companyRegNumber")} /></Field>
-        </div>
-        <Field id="registeredAddress" label="Registered address" error={errors.registeredAddress}>
-          <input {...p("registeredAddress")} autoComplete="street-address" placeholder="Street, area" />
-        </Field>
-        <Field id="operationalAddress" label="Operational address" error={errors.operationalAddress}>
-          <input {...p("operationalAddress")} placeholder="Where your operations run from" />
-        </Field>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <Field id="country" label="Country"><input {...p("country")} value="Pakistan" readOnly className="input cursor-not-allowed bg-raised text-muted" /></Field>
-          <Field id="province" label="Province" error={errors.province}>
-            {select("province", PROVINCES, "Select", { value: province, onChange: (e) => { setProvince(e.target.value); setCity(""); } })}
-          </Field>
-          <Field id="city" label="City" error={errors.city}>
-            {select("city", GEO[province] ?? [], "Select", { value: city, disabled: !province, onChange: (e) => setCity(e.target.value) })}
-          </Field>
-        </div>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <Field id="officePhone" label="Office phone number" error={errors.officePhone}><input {...p("officePhone")} type="tel" autoComplete="tel" placeholder="042 35123456" /></Field>
-          <Field id="officeEmail" label="Office email" error={errors.officeEmail}><input {...p("officeEmail")} type="email" placeholder="info@company.com" /></Field>
-        </div>
-        <Field id="officeWebsite" label="Office website" optional error={errors.officeWebsite}><input {...p("officeWebsite")} inputMode="url" placeholder="www.company.com" /></Field>
+        <CompanyFields errors={errors} />
         <button type="button" onClick={next} className="btn-primary h-11 w-full text-[15px]">Continue <ArrowRight className="size-4" aria-hidden /></button>
       </div>
 

@@ -7,6 +7,7 @@ import type { RegistrationStatus } from "@/lib/types";
 import { cn, formatDate, registrationMeta } from "@/lib/utils";
 import { Pill } from "@/components/ui/pill";
 import { useToast } from "@/components/ui/toast";
+import { useEditGuard } from "./edit-guard";
 
 type Choice = "approve" | "info" | "reject";
 const OPEN: RegistrationStatus[] = ["pending", "under_review", "info_required"];
@@ -15,6 +16,7 @@ export function ReviewPanel({ id, kind, status, reviewedAt, reviewRemarks }: { i
   const [state, action, pending] = useActionState<ReviewState, FormData>(reviewRegistration, {});
   const [choice, setChoice] = useState<Choice>("approve");
   const toast = useToast();
+  const { editing } = useEditGuard();
 
   useEffect(() => {
     if (state.ok && state.message) toast(state.message);
@@ -83,7 +85,9 @@ export function ReviewPanel({ id, kind, status, reviewedAt, reviewRemarks }: { i
 
       {state.error && <p role="alert" className="rounded-control bg-bad-soft px-3 py-2 text-sm text-bad">{state.error}</p>}
 
-      <button type="submit" disabled={pending} className={cn("btn h-11 w-full text-[15px] text-white disabled:opacity-60", choice === "reject" ? "bg-bad hover:opacity-90" : "bg-brand hover:bg-brand-strong dark:text-canvas")}>
+      {editing && <p role="status" className="rounded-control bg-beacon-soft px-3 py-2 text-sm text-warn">Save or cancel your edits before deciding.</p>}
+
+      <button type="submit" disabled={pending || editing} className={cn("btn h-11 w-full text-[15px] text-white disabled:opacity-60", choice === "reject" ? "bg-bad hover:opacity-90" : "bg-brand hover:bg-brand-strong dark:text-canvas")}>
         {pending ? <><Loader2 className="size-4 animate-spin" aria-hidden /> Saving</> : submitLabel}
       </button>
     </form>

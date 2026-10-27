@@ -65,3 +65,9 @@ export function fieldErrors(issues: z.core.$ZodIssue[]) {
   for (const i of issues) out[String(i.path[0])] ??= i.message;
   return out;
 }
+
+/** The Super Administrator edits company and contact details on a request. Passwords are never editable. */
+export const adminEditSchema = z
+  .object({ ...companySchema.shape, ...accountSchema.shape })
+  .omit({ password: true, confirm: true })
+  .superRefine(cityCheck);
