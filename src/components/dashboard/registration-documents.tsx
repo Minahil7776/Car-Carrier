@@ -21,7 +21,7 @@ export function RegistrationDocuments({ data, editable }: { data: RegDetail; edi
   if (editable) {
     return (
       <Section title="Documents" description="Upload or replace a document the applicant sent you. Each change is saved straight away.">
-        <DocumentsStep uploads={uploads} intro={false} />
+        <DocumentsStep uploads={uploads} documentTypes={data.documentTypes} intro={false} />
       </Section>
     );
   }

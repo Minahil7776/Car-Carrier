@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
+import { can, getCurrentUser } from "@/lib/auth";
 import { getBranchData, getHeadOfficeData, getSuperAdminData } from "@/lib/dashboard-data";
 import { getDb } from "@/lib/mongodb";
 import type { RoleDoc } from "@/lib/types";
@@ -32,7 +32,7 @@ export default async function DashboardPage() {
     return (
       <>
         <PageHeader name={user.name} scopeLabel="Head office" subtitle={`${user.office.name} at a glance.`} />
-        <HeadOfficeView data={data} />
+        <HeadOfficeView data={data} canAddBranch={can(user, "branch.create") && user.access.level === "allowed"} />
       </>
     );
   }

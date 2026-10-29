@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 import { ChevronRight, Search } from "lucide-react";
 import type { OrgRow } from "@/lib/dashboard-data";
@@ -49,10 +50,11 @@ export function OrgTree({ rows }: { rows: OrgRow[] }) {
                 </button>
                 {isOpen && (
                   <ul className="mb-3 ml-[7px] space-y-px border-l border-line pl-5">
+                    <li className="py-1.5"><Link href={`/dashboard/organizations/${o.id}`} className="text-xs font-medium text-brand hover:underline">Open organization</Link></li>
                     {o.branches.length === 0 && <li className="py-1.5 text-xs text-muted">No branches yet.</li>}
                     {o.branches.map((b) => (
                       <li key={b.id} className="flex items-center gap-3 rounded-md py-1.5 pr-1 text-sm">
-                        <span className="flex-1 truncate">{b.name}</span>
+                        <Link href={`/dashboard/branches/${b.id}`} className="flex-1 truncate hover:text-brand hover:underline">{b.name}</Link>
                         <span className="hidden font-mono text-xs text-faint sm:inline">{b.code}</span>
                         <Pill tone={officeStatusMeta[b.status].tone} className="scale-95">{officeStatusMeta[b.status].label}</Pill>
                       </li>

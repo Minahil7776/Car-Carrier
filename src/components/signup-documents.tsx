@@ -2,7 +2,7 @@
 
 import { useCallback, useRef, useState } from "react";
 import { AlertCircle, CheckCircle2, Eye, FileText, Loader2, RefreshCw, Replace, Trash2, Upload } from "lucide-react";
-import { DOCUMENT_TYPES, MIN_DOCUMENTS, UPLOAD_LIMITS } from "@/lib/signup-config";
+import { MIN_DOCUMENTS, UPLOAD_LIMITS, type DocumentType } from "@/lib/signup-config";
 import { cn } from "@/lib/utils";
 
 export interface DocEntry {
@@ -120,8 +120,8 @@ export function useDocumentUploads(target: UploadTarget) {
 
 type Uploads = ReturnType<typeof useDocumentUploads>;
 
-export function DocumentsStep({ uploads, error, intro = true }: { uploads: Uploads; error?: string; intro?: boolean }) {
-  const required = DOCUMENT_TYPES.filter((d) => d.required).length;
+export function DocumentsStep({ uploads, documentTypes, error, intro = true }: { uploads: Uploads; documentTypes: DocumentType[]; error?: string; intro?: boolean }) {
+  const required = documentTypes.filter((d) => d.required).length;
   return (
     <div className="space-y-4">
       {intro && (
@@ -138,13 +138,13 @@ export function DocumentsStep({ uploads, error, intro = true }: { uploads: Uploa
       {error && <p id="documents-err" role="alert" className="rounded-control bg-bad-soft px-3 py-2 text-sm text-bad">{error}</p>}
 
       <ul className="divide-y divide-line rounded-control border border-line">
-        {DOCUMENT_TYPES.map((t) => <Row key={t.key} type={t} entry={uploads.docs[t.key]} uploads={uploads} />)}
+        {documentTypes.map((t) => <Row key={t.key} type={t} entry={uploads.docs[t.key]} uploads={uploads} />)}
       </ul>
     </div>
   );
 }
 
-function Row({ type, entry, uploads }: { type: (typeof DOCUMENT_TYPES)[number]; entry?: DocEntry; uploads: Uploads }) {
+function Row({ type, entry, uploads }: { type: DocumentType; entry?: DocEntry; uploads: Uploads }) {
   const input = useRef<HTMLInputElement>(null);
   const pick = () => input.current?.click();
   const busy = entry?.status === "uploading" || entry?.status === "removing";

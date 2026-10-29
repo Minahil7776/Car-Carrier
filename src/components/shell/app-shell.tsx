@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Bell, Building2, ChevronsLeft, ClipboardCheck, ChevronsRight, GitBranch, LayoutDashboard, LogOut, Menu, ScrollText, Search, ShieldCheck, Users, X,
+  Bell, Building2, ChevronsLeft, ClipboardCheck, ChevronsRight, CreditCard, GitBranch, LayoutDashboard, LogOut, Menu, ScrollText, Search, ShieldCheck, Users, X,
 } from "lucide-react";
 import { logout, markNotificationsRead } from "@/app/actions";
 import { cn, timeAgo } from "@/lib/utils";
@@ -32,14 +32,15 @@ function navFor(scope: ShellUser["scope"]): NavItem[] {
   if (scope === "system")
     return [dash,
       { label: "Registrations", href: "/dashboard/registrations", icon: ClipboardCheck, ready: true },
-      { label: "Organizations", href: "/dashboard/organizations", icon: Building2, ready: false },
-      { label: "Branches", href: "/dashboard/branches", icon: GitBranch, ready: false },
+      { label: "Organizations", href: "/dashboard/organizations", icon: Building2, ready: true },
+      { label: "Branches", href: "/dashboard/branches", icon: GitBranch, ready: true },
+      { label: "Subscriptions", href: "/dashboard/subscriptions", icon: CreditCard, ready: true },
       { label: "Users", href: "/dashboard/users", icon: Users, ready: false },
       { label: "Roles", href: "/dashboard/roles", icon: ShieldCheck, ready: false },
       { label: "Audit logs", href: "/dashboard/audit", icon: ScrollText, ready: false }];
   if (scope === "head")
     return [dash,
-      { label: "Branches", href: "/dashboard/branches", icon: GitBranch, ready: false },
+      { label: "Branches", href: "/dashboard/branches", icon: GitBranch, ready: true },
       { label: "Users", href: "/dashboard/users", icon: Users, ready: false },
       { label: "Roles", href: "/dashboard/roles", icon: ShieldCheck, ready: false },
       { label: "Audit logs", href: "/dashboard/audit", icon: ScrollText, ready: false }];

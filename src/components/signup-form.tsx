@@ -4,7 +4,7 @@ import Link from "next/link";
 import { startTransition, useActionState, useEffect, useMemo, useRef, useState } from "react";
 import { AlertCircle, ArrowLeft, ArrowRight, CheckCircle2, Eye, EyeOff, Loader2 } from "lucide-react";
 import { signup, type SignupState } from "@/app/signup/actions";
-import { DESIGNATIONS, MIN_DOCUMENTS, DOCUMENT_TYPES } from "@/lib/signup-config";
+import { DESIGNATIONS, MIN_DOCUMENTS, type DocumentType } from "@/lib/signup-config";
 import { accountSchema, companySchema, fieldErrors } from "@/lib/signup-schema";
 import { cn } from "@/lib/utils";
 import { Field, SelectBox, inputProps } from "@/components/ui/form-field";
@@ -24,7 +24,7 @@ function strength(p: string) {
   return Math.min(s, 4);
 }
 
-export function SignupForm({ uploadToken }: { uploadToken: string }) {
+export function SignupForm({ uploadToken, documentTypes }: { uploadToken: string; documentTypes: DocumentType[] }) {
   const [state, action, pending] = useActionState<SignupState, FormData>(signup, {});
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -76,7 +76,7 @@ export function SignupForm({ uploadToken }: { uploadToken: string }) {
     if (!validateStep(1) || !validateStep(2)) return;
     if (uploads.uploading) return showErrors({ documents: "Please wait for your uploads to finish." });
     if (uploads.failed) return showErrors({ documents: "A document failed to upload. Retry it or remove it, then submit." });
-    const missing = DOCUMENT_TYPES.filter((t) => t.required && !uploads.docs[t.key]);
+    const missing = documentTypes.filter((t) => t.required && !uploads.docs[t.key]);
     if (missing.length) return showErrors({ documents: `Please upload: ${missing.map((t) => t.label).join(", ")}.` });
     if (uploads.doneCount < MIN_DOCUMENTS) return showErrors({ documents: `Upload at least ${MIN_DOCUMENTS} document to continue.` });
 
@@ -165,7 +165,7 @@ export function SignupForm({ uploadToken }: { uploadToken: string }) {
       </div>
 
       <div className={cn("space-y-4", step !== 3 && "hidden")}>
-        <DocumentsStep uploads={uploads} error={errors.documents} />
+        <DocumentsStep uploads={uploads} documentTypes={documentTypes} error={errors.documents} />
 
         {/* Honeypot */}
         <input name="website" tabIndex={-1} autoComplete="off" aria-hidden className="absolute -left-[9999px] size-0 opacity-0" />

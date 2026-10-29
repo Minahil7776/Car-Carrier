@@ -1,5 +1,6 @@
 import "server-only";
-import { DOCUMENT_TYPES, UPLOAD_LIMITS } from "./signup-config";
+import type { DocumentType } from "./signup-config";
+import { UPLOAD_LIMITS } from "./signup-config";
 import { sniffMime } from "./signup-draft";
 
 const MB = UPLOAD_LIMITS.maxFileBytes / 1024 / 1024;
@@ -15,9 +16,9 @@ export function declaredTooLarge(req: Request) {
 export const tooLargeMessage = `This file is too large. The limit is ${MB} MB.`;
 
 /** Shared by the public signup upload and the administrator's upload, so both enforce the same rules. */
-export async function readUpload(form: FormData): Promise<UploadResult> {
+export async function readUpload(form: FormData, documentTypes: DocumentType[]): Promise<UploadResult> {
   const docType = String(form.get("docType") ?? "");
-  if (!DOCUMENT_TYPES.some((d) => d.key === docType)) return { ok: false, error: "Unknown document type.", status: 400 };
+  if (!documentTypes.some((d) => d.key === docType)) return { ok: false, error: "Unknown document type.", status: 400 };
 
   const file = form.get("file");
   if (!(file instanceof File)) return { ok: false, error: "Choose a file to upload.", status: 400 };

@@ -3,6 +3,7 @@ import { Binary, ObjectId } from "mongodb";
 import { UPLOAD_LIMITS } from "@/lib/signup-config";
 import { filesCollection, verifyDraftToken } from "@/lib/signup-draft";
 import { declaredTooLarge, readUpload, tooLargeMessage } from "@/lib/upload-validate";
+import { getRegistrationDocumentTypes } from "@/lib/registration-documents";
 
 export const runtime = "nodejs";
 const fail = (error: string, status: number) => NextResponse.json({ error }, { status, headers: { "Cache-Control": "no-store" } });
@@ -16,7 +17,7 @@ export async function POST(req: NextRequest) {
   const draftId = await verifyDraftToken(String(form.get("token") ?? ""));
   if (!draftId) return fail("Your upload session expired. Refresh the page to start again.", 401);
 
-  const up = await readUpload(form);
+  const up = await readUpload(form, await getRegistrationDocumentTypes());
   if (!up.ok) return fail(up.error, up.status);
   const { docType, buf, mime, name } = up;
 

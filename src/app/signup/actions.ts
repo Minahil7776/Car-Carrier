@@ -6,7 +6,8 @@ import { ObjectId } from "mongodb";
 import { getDb } from "@/lib/mongodb";
 import { writeAudit } from "@/lib/audit";
 import type { UserDoc } from "@/lib/types";
-import { DOCUMENT_TYPES, MIN_DOCUMENTS } from "@/lib/signup-config";
+import { MIN_DOCUMENTS } from "@/lib/signup-config";
+import { getRegistrationDocumentTypes } from "@/lib/registration-documents";
 import { fieldErrors, normalizeNtn, normalizeWebsite, signupSchema } from "@/lib/signup-schema";
 import { filesCollection, verifyDraftToken } from "@/lib/signup-draft";
 
@@ -30,6 +31,7 @@ export async function signup(_prev: SignupState, form: FormData): Promise<Signup
   if (!parsed.success) return { fieldErrors: fieldErrors(parsed.error.issues) };
   const d = parsed.data;
   const ntn = normalizeNtn(d.ntn);
+  const documentTypes = await getRegistrationDocumentTypes();
 
   // Documents the browser says it uploaded: [{ docType, id }]
   let claimed: { docType: string; id: string }[] = [];
@@ -37,11 +39,11 @@ export async function signup(_prev: SignupState, form: FormData): Promise<Signup
   const draftId = await verifyDraftToken(String(form.get("token") ?? ""));
   if (!draftId) return { fieldErrors: { documents: "Your upload session expired. Refresh the page and start again." } };
 
-  const required = DOCUMENT_TYPES.filter((t) => t.required);
+  const required = documentTypes.filter((t) => t.required);
   const missing = required.filter((t) => !claimed.some((c) => c.docType === t.key));
   if (missing.length) return { fieldErrors: { documents: `Please upload: ${missing.map((t) => t.label).join(", ")}.` } };
   if (claimed.length < MIN_DOCUMENTS) return { fieldErrors: { documents: `Upload at least ${MIN_DOCUMENTS} document to continue.` } };
-  if (claimed.some((c) => !ObjectId.isValid(c.id) || !DOCUMENT_TYPES.some((t) => t.key === c.docType)) || new Set(claimed.map((c) => c.docType)).size !== claimed.length) {
+  if (claimed.some((c) => !ObjectId.isValid(c.id) || !documentTypes.some((t) => t.key === c.docType)) || new Set(claimed.map((c) => c.docType)).size !== claimed.length) {
     return { fieldErrors: { documents: "Something is wrong with the uploaded documents. Remove them and upload again." } };
   }
 

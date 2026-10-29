@@ -1,10 +1,12 @@
 import type { OfficeDoc, UserDoc } from "./types";
 import { resolveSubscription } from "./subscription";
+import { effectiveSubscription, type SubscriptionSettings } from "./subscription-management";
 
 export type AccessLevel = "allowed" | "restricted" | "denied";
 export interface AccessDecision {
   level: AccessLevel;
   reason?: string;
+  warning?: string;
 }
 
 /**
@@ -16,6 +18,7 @@ export function decideAccess(
   user: Pick<UserDoc, "status" | "officeId">,
   office: OfficeDoc | null,
   headOffice: OfficeDoc | null,
+  subscriptionSettings: SubscriptionSettings = { gracePeriodDays: 0, graceMode: "warning_only" },
 ): AccessDecision {
   if (user.status !== "active") {
     return { level: "denied", reason: "Your account is suspended. Contact your administrator." };
@@ -35,9 +38,18 @@ export function decideAccess(
       return { level: "denied", reason: `${o.name} is still awaiting approval.` };
   }
 
-  // A branch without its own subscription inherits its head office's.
-  const sub = office.subscription ?? headOffice?.subscription;
+  const sub = effectiveSubscription(office, headOffice);
   const { status } = resolveSubscription(sub);
+  if (status === "expired" && sub?.expiresAt && subscriptionSettings.gracePeriodDays > 0) {
+    const graceEndsAt = sub.expiresAt.getTime() + subscriptionSettings.gracePeriodDays * 86_400_000;
+    if (Date.now() <= graceEndsAt) {
+      const warning = `Your subscription expired. The ${subscriptionSettings.gracePeriodDays}-day grace period ends ${new Date(graceEndsAt).toLocaleDateString("en-GB")}.`;
+      if (subscriptionSettings.graceMode === "warning_only" || subscriptionSettings.graceMode === "full_access") {
+        return { level: "allowed", warning };
+      }
+      return { level: "restricted", reason: `${warning} Access is restricted during the grace period.` };
+    }
+  }
   if (status === "expired" || status === "not_subscribed" || status === "cancelled") {
     return { level: "restricted", reason: "Your office subscription is not active. Some actions are limited." };
   }

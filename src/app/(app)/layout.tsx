@@ -24,6 +24,12 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           <p>{user.access.reason} Contact the system administrator to restore full access.</p>
         </div>
       )}
+      {user.access.level === "allowed" && user.access.warning && (
+        <div role="status" className="mb-6 flex items-start gap-3 rounded-card border border-beacon/40 bg-beacon-soft px-4 py-3 text-sm text-warn">
+          <TriangleAlert className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <p>{user.access.warning}</p>
+        </div>
+      )}
       {children}
     </AppShell>
   );

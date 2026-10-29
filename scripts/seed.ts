@@ -46,6 +46,12 @@ async function main() {
   await db.collection("audit_logs").createIndex({ headOfficeId: 1, createdAt: -1 });
   await db.collection("audit_logs").createIndex({ officeId: 1, createdAt: -1 });
   await db.collection("notifications").createIndex({ userId: 1, createdAt: -1 });
+  // Organization and branch module
+  await db.collection("office_status_history").createIndex({ officeId: 1, at: -1 });
+  await db.collection("office_status_history").createIndex({ headOfficeId: 1, at: -1 });
+  await db.collection("offices").createIndex({ type: 1, status: 1 });
+  // One company per NTN. Partial, so offices without an NTN (demo data) don't collide.
+  await db.collection("offices").createIndex({ ntn: 1 }, { unique: true, partialFilterExpression: { ntn: { $type: "string" } } });
 
   // Roles
   for (const r of ROLES) {

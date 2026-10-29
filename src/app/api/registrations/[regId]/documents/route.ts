@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import { getDb } from "@/lib/mongodb";
 import { writeAudit } from "@/lib/audit";
 import { docLabel } from "@/lib/signup-config";
+import { getRegistrationDocumentTypes } from "@/lib/registration-documents";
 import { filesCollection } from "@/lib/signup-draft";
 import { declaredTooLarge, readUpload, tooLargeMessage } from "@/lib/upload-validate";
 
@@ -37,7 +38,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ reg
 
   let form: FormData;
   try { form = await req.formData(); } catch { return fail("The upload could not be read. Please try again.", 400); }
-  const up = await readUpload(form);
+  const documentTypes = await getRegistrationDocumentTypes();
+  const up = await readUpload(form, documentTypes);
   if (!up.ok) return fail(up.error, up.status);
 
   try {
@@ -54,13 +56,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ reg
       { _id: reg._id, status: { $in: OPEN } },
       {
         $set: { documents, documentsCount: documents.length, ...(reg.status === "pending" ? { status: "under_review" } : {}) },
-        $push: { history: historyEntry(user.name, "document_added", `${replaced ? "Replaced" : "Added"} ${docLabel(up.docType)}: ${up.name}`) },
+        $push: { history: historyEntry(user.name, "document_added", `${replaced ? "Replaced" : "Added"} ${docLabel(up.docType, documentTypes)}: ${up.name}`) },
       } as never,
     );
     if (!res.modifiedCount) { await files.deleteOne({ _id: fileId }); return fail("This request has just been decided, so the document was not saved.", 409); }
 
     if (replaced) await files.deleteOne({ _id: replaced.fileId });
-    await writeAudit({ userId: new ObjectId(user.id), userName: user.name, headOfficeId: null, officeId: null, action: "registration.document", summary: `${replaced ? "Replaced" : "Added"} ${docLabel(up.docType)} on ${reg.officeName}`, entity: "registration", entityId: regId });
+    await writeAudit({ userId: new ObjectId(user.id), userName: user.name, headOfficeId: null, officeId: null, action: "registration.document", summary: `${replaced ? "Replaced" : "Added"} ${docLabel(up.docType, documentTypes)} on ${reg.officeName}`, entity: "registration", entityId: regId });
     return NextResponse.json({ file: { id: fileId.toString(), docType: up.docType, name: up.name, size: up.buf.length } }, { headers: { "Cache-Control": "no-store" } });
   } catch (err) {
     console.error("admin document upload failed", err);
@@ -76,6 +78,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
   const g = await gate(regId);
   if (g.err) return g.err;
   const { user, db, reg } = g;
+  const documentTypes = await getRegistrationDocumentTypes();
 
   const existing: StoredDoc[] = reg.documents ?? [];
   const target = existing.find((d) => d.fileId.toString() === fileId);
@@ -85,11 +88,11 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ r
     const documents = existing.filter((d) => d.fileId.toString() !== fileId);
     const res = await db.collection("registrations").updateOne(
       { _id: reg._id, status: { $in: OPEN } },
-      { $set: { documents, documentsCount: documents.length }, $push: { history: historyEntry(user.name, "document_removed", `Removed ${docLabel(target.docType)}: ${target.name}`) } } as never,
+      { $set: { documents, documentsCount: documents.length }, $push: { history: historyEntry(user.name, "document_removed", `Removed ${docLabel(target.docType, documentTypes)}: ${target.name}`) } } as never,
     );
     if (!res.modifiedCount) return fail("This request has just been decided, so nothing was changed.", 409);
     await (await filesCollection()).deleteOne({ _id: new ObjectId(fileId), registrationId: reg._id });
-    await writeAudit({ userId: new ObjectId(user.id), userName: user.name, headOfficeId: null, officeId: null, action: "registration.document", summary: `Removed ${docLabel(target.docType)} from ${reg.officeName}`, entity: "registration", entityId: regId });
+    await writeAudit({ userId: new ObjectId(user.id), userName: user.name, headOfficeId: null, officeId: null, action: "registration.document", summary: `Removed ${docLabel(target.docType, documentTypes)} from ${reg.officeName}`, entity: "registration", entityId: regId });
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("admin document remove failed", err);

@@ -19,11 +19,13 @@ export type SubscriptionStatus =
   | "cancelled";
 export type Scope = "system" | "head" | "branch";
 
-/** Subscription dates only. Fees and payments are intentionally out of scope for this release. */
 export interface OfficeSubscription {
   expiresAt?: Date | null;
   exemptFrom?: Date | null;
   exemptUntil?: Date | null;
+  exemptionId?: ObjectId;
+  inheritExemption?: boolean;
+  planId?: ObjectId;
   cancelled?: boolean;
 }
 
@@ -47,7 +49,37 @@ export interface OfficeDoc {
   country: string;
   status: OfficeStatus;
   subscription?: OfficeSubscription;
+  // Branch fields (FR-BR-001)
+  branchCode?: string; // the short, configurable part of the identifier, e.g. LHR in BR-LHR-001
+  managerName?: string;
+  managerEmail?: string;
+  managerPhone?: string;
+  openingDate?: Date;
+  notes?: string;
+  // Head office primary contact (FR-ORG-001)
+  contactName?: string;
+  contactDesignation?: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  // Latest administrative status change (full trail lives in office_status_history)
+  statusReason?: string | null;
+  statusChangedAt?: Date | null;
+  createdById?: ObjectId | null;
+  updatedAt?: Date;
   createdAt: Date;
+}
+
+/** One row per administrative status change (SRS FR-ORG-007: previous status, new status, who, when, why). */
+export interface OfficeStatusHistoryDoc {
+  _id: ObjectId;
+  officeId: ObjectId;
+  headOfficeId: ObjectId; // tenant key
+  from: OfficeStatus | null;
+  to: OfficeStatus;
+  reason: string;
+  byId: ObjectId | null;
+  byName: string;
+  at: Date;
 }
 
 export interface UserDoc {

@@ -2,7 +2,8 @@ import "server-only";
 import { ObjectId } from "mongodb";
 import { getDb } from "./mongodb";
 import type { RegistrationStatus } from "./types";
-import { docLabel } from "./signup-config";
+import { docLabel, type DocumentType } from "./signup-config";
+import { getRegistrationDocumentTypes } from "./registration-documents";
 
 export type RegFilter = "open" | "approved" | "rejected" | "all";
 const OPEN: RegistrationStatus[] = ["pending", "under_review", "info_required"];
@@ -35,6 +36,7 @@ export interface RegDetail extends RegListRow {
   officeEmail: string | null;
   officeWebsite: string | null;
   designation: string | null;
+  documentTypes: DocumentType[];
   documents: { id: string; docType: string; label: string; name: string; size: number }[];
   reviewedAt: string | null;
   reviewRemarks: string | null;
@@ -76,6 +78,13 @@ export async function getRegistrationDetail(id: string): Promise<RegDetail | nul
   const db = await getDb();
   const r = await db.collection("registrations").findOne({ _id: new ObjectId(id) });
   if (!r) return null;
+  const configuredTypes = await getRegistrationDocumentTypes();
+  const storedDocuments = (r.documents ?? []) as { fileId: ObjectId; docType: string; name: string; size: number }[];
+  const knownKeys = new Set(configuredTypes.map((type) => type.key));
+  const documentTypes = [
+    ...configuredTypes,
+    ...[...new Set(storedDocuments.map((d) => d.docType).filter((key) => !knownKeys.has(key)))].map((key) => ({ key, label: key, required: false })),
+  ];
   const parent = r.parentId ? await db.collection("offices").findOne({ _id: r.parentId }) : null;
   return {
     id: r._id.toString(),
@@ -104,7 +113,8 @@ export async function getRegistrationDetail(id: string): Promise<RegDetail | nul
     officeEmail: r.officeEmail ?? null,
     officeWebsite: r.officeWebsite ?? null,
     designation: r.designation ?? null,
-    documents: (r.documents ?? []).map((d: { fileId: ObjectId; docType: string; name: string; size: number }) => ({ id: d.fileId.toString(), docType: d.docType, label: docLabel(d.docType), name: d.name, size: d.size })),
+    documentTypes,
+    documents: storedDocuments.map((d) => ({ id: d.fileId.toString(), docType: d.docType, label: docLabel(d.docType, documentTypes), name: d.name, size: d.size })),
     history: (r.history ?? []).map((h: { at: Date; by: string; action: RegDetail["history"][number]["action"]; remarks?: string | null }) => ({
       at: new Date(h.at).toISOString(),
       by: h.by,

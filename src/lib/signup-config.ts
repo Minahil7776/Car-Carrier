@@ -19,8 +19,7 @@ export const DESIGNATIONS = [
   "Other",
 ] as const;
 
-// CONFIRM: SRS FR-ORG-003 lists example document types and says the list must be configurable.
-// Move this to a database collection when the Super Administrator needs to edit it in the UI.
+// Seed list used until the Super Administrator configures document types in the dashboard.
 export interface DocumentType {
   key: string;
   label: string;
@@ -51,4 +50,4 @@ export const UPLOAD_LIMITS = {
   draftHours: 24,
 };
 
-export const docLabel = (key: string) => DOCUMENT_TYPES.find((d) => d.key === key)?.label ?? key;
+export const docLabel = (key: string, types: DocumentType[] = DOCUMENT_TYPES) => types.find((d) => d.key === key)?.label ?? key;

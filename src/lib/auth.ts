@@ -5,6 +5,7 @@ import { ObjectId } from "mongodb";
 import { getDb } from "./mongodb";
 import { SESSION_COOKIE, verifySession } from "./session";
 import { decideAccess, type AccessDecision } from "./access";
+import { getSubscriptionSettings } from "./subscription-management";
 import type { OfficeDoc, RoleDoc, Scope, UserDoc } from "./types";
 
 export interface CurrentUser {
@@ -43,8 +44,9 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
         : null;
 
   const roles = await db.collection<RoleDoc>("roles").find({ key: { $in: user.roleKeys } }).toArray();
+  const subscriptionSettings = office ? await getSubscriptionSettings() : { gracePeriodDays: 0, graceMode: "warning_only" as const };
   const scope: Scope = !office ? "system" : office.type === "head" ? "head" : "branch";
-  const access = decideAccess(user, office, headOffice);
+  const access = decideAccess(user, office, headOffice, subscriptionSettings);
 
   return {
     id: user._id.toString(),
@@ -64,5 +66,6 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
 });
 
 export function can(user: CurrentUser, permission: string) {
-  return user.permissions.includes(permission);
+  // The Super Administrator role carries the "*" wildcard.
+  return user.permissions.includes("*") || user.permissions.includes(permission);
 }
