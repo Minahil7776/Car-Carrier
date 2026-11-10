@@ -7,7 +7,8 @@ import { formatDate, subscriptionMeta } from "@/lib/utils";
 import { Pill } from "@/components/ui/pill";
 import { Empty } from "@/components/dashboard/section";
 import { getSubscriptionAdminData } from "@/lib/subscription-management";
-import { changePlanStatus, grantExemption, recordPayment, revokeExemption, savePlan, updateGraceSettings } from "./actions";
+import { changePlanStatus, grantExemption, revokeExemption, savePlan, updateGraceSettings } from "./actions";
+import { PaymentForm } from "./payment-form";
 
 export const metadata: Metadata = { title: "Subscriptions" };
 export const dynamic = "force-dynamic";
@@ -136,24 +137,7 @@ export default async function SubscriptionsPage({ searchParams }: { searchParams
 
       <section id="record-payment" className="card space-y-4 p-5">
         <div><h2 className="text-[15px] font-semibold">Record subscription payment</h2><p className="mt-0.5 text-sm text-muted">Payments are recorded against the office that paid and extend that office’s validity through the subscription period.</p></div>
-        <form action={recordPayment} encType="multipart/form-data" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <label className={`${label} lg:col-span-2`}>Office<select name="officeId" required defaultValue={defaultOffice ?? ""} className={input}>
-            <option value="" disabled>Select office</option>{data.offices.map((entry) => <option key={entry.id} value={entry.id}>{entry.name} ({entry.type})</option>)}
-          </select></label>
-          <label className={`${label} lg:col-span-2`}>Active plan<select name="planId" required defaultValue="" className={input}>
-            <option value="" disabled>Select plan</option>{data.plans.filter((plan) => plan.status === "active").map((plan) => <option key={plan.id} value={plan.id}>{plan.name} · Rs. {plan.amount.toLocaleString()} · {plan.periodLabel}</option>)}
-          </select></label>
-          <label className={label}>Receipt number<input name="receiptNumber" required maxLength={60} className={input} placeholder="SUB-2027-000145" /></label>
-          <label className={label}>Amount (PKR)<input name="amount" type="number" min="0" step="0.01" required className={input} /></label>
-          <label className={label}>Payment date<input name="paymentDate" type="date" required defaultValue={today} className={input} /></label>
-          <label className={label}>Payment method<input name="method" required maxLength={60} className={input} placeholder="Bank transfer" /></label>
-          <label className={label}>Subscription period from<input name="periodStart" type="date" required className={input} /></label>
-          <label className={label}>Subscription period to<input name="periodEnd" type="date" required className={input} /></label>
-          <label className={label}>Transaction / reference<input name="reference" maxLength={120} className={input} /></label>
-          <label className={label}>Supporting receipt (PDF/JPG/PNG, max 4 MB)<input name="receipt" type="file" accept=".pdf,.jpg,.jpeg,.png" className="block w-full text-sm text-muted file:mr-3 file:rounded-control file:border-0 file:bg-raised file:px-3 file:py-2" /></label>
-          <label className={`${label} lg:col-span-4`}>Remarks (optional)<textarea name="remarks" maxLength={500} rows={2} className="input h-auto resize-y py-2.5" /></label>
-          <div className="lg:col-span-4"><button className={button}>Save payment</button></div>
-        </form>
+        <PaymentForm offices={data.offices} plans={data.plans.filter((plan) => plan.status === "active")} defaultOffice={defaultOffice} today={today} />
       </section>
 
       <section id="outstanding" className="card overflow-hidden">

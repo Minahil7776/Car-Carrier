@@ -174,10 +174,8 @@ export async function recordPayment(form: FormData) {
   }).safeParse(Object.fromEntries(form));
   const paymentDate = dateValue(form.get("paymentDate"));
   const periodStart = dateValue(form.get("periodStart"));
-  const periodEndValue = dateValue(form.get("periodEnd"));
-  const periodEnd = periodEndValue ? dateEnd(periodEndValue) : null;
   if (!ObjectId.isValid(officeId) || !ObjectId.isValid(planId) || !parsed.success) back(parsed.success ? "Select a valid office and plan." : parsed.error.issues[0]?.message ?? "Check the payment details.");
-  if (!paymentDate || !periodStart || !periodEnd || periodEnd < periodStart) back("Enter valid payment and subscription period dates.");
+  if (!paymentDate || !periodStart) back("Enter valid payment and subscription period dates.");
 
   const db = await getDb();
   const [office, plan] = await Promise.all([
@@ -187,9 +185,9 @@ export async function recordPayment(form: FormData) {
   if (!office || !plan) back("The selected office or active plan could not be found.");
   if (plan.officeType !== "both" && plan.officeType !== office.type) back("This plan does not apply to the selected office type.");
   if (plan.effectiveFrom > paymentDate) back("This plan is not effective on the payment date.");
-  if (periodEnd.getTime() - periodStart.getTime() + 1 !== plan.periodDays * 86_400_000) {
-    back(`The subscription period must be ${plan.periodDays} days for the selected plan.`);
-  }
+  if (periodStart.getTime() < paymentDate.getTime() - 86_400_000) back("The subscription period cannot start before the payment date.");
+  const periodEnd = dateEnd(new Date(periodStart.getTime() + (plan.periodDays - 1) * 86_400_000));
+
   const duplicate = await db.collection<SubscriptionPayment>("subscription_payments").findOne({ receiptNumber: parsed.data.receiptNumber });
   if (duplicate) back("That receipt number has already been used.");
 

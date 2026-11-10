@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth";
+import { can, getCurrentUser } from "@/lib/auth";
 import { getUnreadNotifications } from "@/lib/dashboard-data";
 import { AppShell } from "@/components/shell/app-shell";
 import { AccessBlocked } from "@/components/shell/access-blocked";
@@ -15,7 +15,16 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <AppShell
-      user={{ name: user.name, email: user.email, scope: user.scope, roleNames: user.roleNames, officeName: user.office?.name ?? null, officeCode: user.office?.code ?? null }}
+      user={{
+        name: user.name,
+        email: user.email,
+        scope: user.scope,
+        roleNames: user.roleNames,
+        officeName: user.office?.name ?? null,
+        officeCode: user.office?.code ?? null,
+        canViewUsers: can(user, "user.view"),
+        canViewRoles: can(user, "role.view"),
+      }}
       notifications={notifications}
     >
       {user.access.level === "restricted" && (

@@ -1,7 +1,7 @@
 import "server-only";
 import { cache } from "react";
 import { cookies } from "next/headers";
-import { ObjectId } from "mongodb";
+import { ObjectId, type Filter } from "mongodb";
 import { getDb } from "./mongodb";
 import { SESSION_COOKIE, verifySession } from "./session";
 import { decideAccess, type AccessDecision } from "./access";
@@ -43,7 +43,20 @@ export const getCurrentUser = cache(async (): Promise<CurrentUser | null> => {
         ? office
         : null;
 
-  const roles = await db.collection<RoleDoc>("roles").find({ key: { $in: user.roleKeys } }).toArray();
+  const roleScope: Filter<RoleDoc> = office
+    ? {
+        scope: office.type,
+        $or: [
+          { isCustom: { $ne: true } },
+          { isCustom: true, headOfficeId: (headOffice ?? office)._id },
+        ],
+      }
+    : { scope: "system" };
+  const roles = await db.collection<RoleDoc>("roles").find({
+    key: { $in: user.roleKeys },
+    status: { $ne: "inactive" },
+    ...roleScope,
+  }).toArray();
   const subscriptionSettings = office ? await getSubscriptionSettings() : { gracePeriodDays: 0, graceMode: "warning_only" as const };
   const scope: Scope = !office ? "system" : office.type === "head" ? "head" : "branch";
   const access = decideAccess(user, office, headOffice, subscriptionSettings);

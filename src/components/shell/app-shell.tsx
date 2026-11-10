@@ -22,34 +22,37 @@ export interface ShellUser {
   roleNames: string[];
   officeName: string | null;
   officeCode: string | null;
+  canViewUsers: boolean;
+  canViewRoles: boolean;
 }
 export interface ShellNotification { id: string; title: string; body: string; read: boolean; at: string }
 
 type NavItem = { label: string; href: string; icon: React.ElementType; ready: boolean };
 
-function navFor(scope: ShellUser["scope"]): NavItem[] {
+function navFor(scope: ShellUser["scope"], canViewUsers: boolean, canViewRoles: boolean): NavItem[] {
   const dash: NavItem = { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, ready: true };
-  if (scope === "system")
+  if (scope === "system") {
     return [dash,
       { label: "Registrations", href: "/dashboard/registrations", icon: ClipboardCheck, ready: true },
       { label: "Organizations", href: "/dashboard/organizations", icon: Building2, ready: true },
       { label: "Branches", href: "/dashboard/branches", icon: GitBranch, ready: true },
       { label: "Subscriptions", href: "/dashboard/subscriptions", icon: CreditCard, ready: true },
-      { label: "Users", href: "/dashboard/users", icon: Users, ready: false },
-      { label: "Roles", href: "/dashboard/roles", icon: ShieldCheck, ready: false },
+      ...(canViewUsers ? [{ label: "Users", href: "/dashboard/users", icon: Users, ready: true }] : []),
+      ...(canViewRoles ? [{ label: "Roles", href: "/dashboard/roles", icon: ShieldCheck, ready: true }] : []),
       { label: "Audit logs", href: "/dashboard/audit", icon: ScrollText, ready: false }];
+  }
   if (scope === "head")
     return [dash,
       { label: "Branches", href: "/dashboard/branches", icon: GitBranch, ready: true },
-      { label: "Users", href: "/dashboard/users", icon: Users, ready: false },
-      { label: "Roles", href: "/dashboard/roles", icon: ShieldCheck, ready: false },
+      ...(canViewUsers ? [{ label: "Users", href: "/dashboard/users", icon: Users, ready: true }] : []),
+      ...(canViewRoles ? [{ label: "Roles", href: "/dashboard/roles", icon: ShieldCheck, ready: true }] : []),
       { label: "Audit logs", href: "/dashboard/audit", icon: ScrollText, ready: false }];
-  return [dash, { label: "Team", href: "/dashboard/users", icon: Users, ready: false }];
+  return [dash, ...(canViewUsers ? [{ label: "Team", href: "/dashboard/users", icon: Users, ready: true }] : [])];
 }
 
 export function AppShell({ user, notifications, children }: { user: ShellUser; notifications: ShellNotification[]; children: React.ReactNode }) {
   const pathname = usePathname();
-  const nav = navFor(user.scope);
+  const nav = navFor(user.scope, user.canViewUsers, user.canViewRoles);
   const [collapsed, setCollapsed] = useState(false);
   const [drawer, setDrawer] = useState(false);
   const [palette, setPalette] = useState(false);

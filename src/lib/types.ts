@@ -102,6 +102,13 @@ export interface RoleDoc {
   name: string;
   scope: Scope;
   permissions: string[];
+  description?: string;
+  status?: "active" | "inactive";
+  isCustom?: boolean;
+  headOfficeId?: ObjectId;
+  createdById?: ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
 export interface RegistrationDoc {
