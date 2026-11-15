@@ -24,6 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         officeCode: user.office?.code ?? null,
         canViewUsers: can(user, "user.view"),
         canViewRoles: can(user, "role.view"),
+        canViewFleet: can(user, "fleet.view"),
       }}
       notifications={notifications}
     >

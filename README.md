@@ -29,12 +29,16 @@ Seeded logins (change the password in `.env.local` before seeding):
 - Three dashboards chosen by the user's office: Super Administrator, Head Office, Branch.
 - Access decision from user status + office status + subscription status + exemption (SRS 13, 47).
   Suspended or blocked users and offices are denied on the next request; an expired subscription only restricts.
+- Tenant-scoped fleet registry for company-owned vehicles, with Head Office recovery-vehicle allocations,
+  transfer history, branch-scoped read-only visibility, vehicle documents, renewal history, and compliance status.
 - Audit log written on sign-in; notifications bell; Ctrl/Cmd+K command palette; light and dark theme; collapsible sidebar.
 
 ## Left out on purpose
 
 Subscription fees, payments, receipts and payment reports (FR-SUB-003/004). Only subscription *status*
-(active, expiring, expired, exempt) is shown. Sidebar items marked "Soon" are the next modules.
+(active, expiring, expired, exempt) is shown. A daily external scheduler must call `POST /api/fleet/expiry-alerts`
+with `Authorization: Bearer <FLEET_ALERTS_SECRET>`. Set `FLEET_ALERTS_SECRET` and SMTP settings to enable
+in-app and email reminders. Trip/booking workflows are not included yet.
 
 ## Structure
 

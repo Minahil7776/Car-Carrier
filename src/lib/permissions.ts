@@ -37,6 +37,17 @@ export const PERMISSION_GROUPS = [
     ],
   },
   {
+    label: "Fleet and vehicle documents",
+    permissions: [
+      { key: "fleet.view", label: "View fleet records" },
+      { key: "fleet.create", label: "Create fleet vehicles" },
+      { key: "fleet.update", label: "Update and retire fleet vehicles" },
+      { key: "fleet.allocate", label: "Allocate and transfer recovery vehicles" },
+      { key: "fleet_document.view", label: "View vehicle documents" },
+      { key: "fleet_document.manage", label: "Upload and renew vehicle documents" },
+    ],
+  },
+  {
     label: "Advances and expenses",
     permissions: [
       { key: "advance.view", label: "View advances" },

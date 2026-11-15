@@ -146,3 +146,89 @@ export interface NotificationDoc {
   read: boolean;
   createdAt: Date;
 }
+
+export type FleetVehicleType = "car_carrier" | "recovery_vehicle" | "other";
+export type FleetOfficeStatus = "active" | "inactive" | "retired";
+export type FleetOperationalStatus = "available" | "assigned" | "on_trip" | "maintenance" | "out_of_service";
+
+export interface FleetAllocationDoc {
+  officeId: ObjectId;
+  allocatedAt: Date;
+  endedAt?: Date;
+  reason: string;
+  byId: ObjectId;
+  byName: string;
+}
+
+export interface FleetStatusChangeDoc {
+  administrativeStatus: FleetOfficeStatus;
+  operationalStatus: FleetOperationalStatus;
+  effectiveAt: Date;
+  reason?: string;
+  byId: ObjectId;
+  byName: string;
+}
+
+export interface FleetVehicleDoc {
+  _id: ObjectId;
+  tenantId: ObjectId;
+  controllingOfficeId: ObjectId;
+  assignedOfficeId: ObjectId;
+  vehicleType: FleetVehicleType;
+  ownershipClassification: "company_owned";
+  fleetId: string;
+  registrationNumber: string;
+  make: string;
+  model: string;
+  modelYear?: number;
+  chassisNumber?: string;
+  engineNumber?: string;
+  acquisitionDate?: Date;
+  capacity?: string;
+  administrativeStatus: FleetOfficeStatus;
+  operationalStatus: FleetOperationalStatus;
+  remarks?: string;
+  retirementReason?: string;
+  allocations: FleetAllocationDoc[];
+  statusHistory: FleetStatusChangeDoc[];
+  createdById: ObjectId;
+  updatedById: ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type FleetDocumentCategory = "registration" | "insurance" | "fitness" | "route_permit" | "other";
+
+export interface FleetVehicleDocumentDoc {
+  _id: ObjectId;
+  tenantId: ObjectId;
+  vehicleId: ObjectId;
+  category: FleetDocumentCategory;
+  verificationStatus: "pending" | "verified" | "rejected";
+  documentNumber?: string;
+  issuingAuthority?: string;
+  issueDate?: Date;
+  effectiveDate?: Date;
+  expiryDate?: Date;
+  jurisdiction?: string;
+  remarks?: string;
+  fileId: ObjectId;
+  fileName: string;
+  mime: string;
+  size: number;
+  supersedesId?: ObjectId;
+  current: boolean;
+  uploadedById: ObjectId;
+  uploadedAt: Date;
+}
+
+export interface FleetFileDoc {
+  _id: ObjectId;
+  tenantId: ObjectId;
+  vehicleId: ObjectId;
+  mime: string;
+  name: string;
+  size: number;
+  data: import("mongodb").Binary;
+  uploadedAt: Date;
+}

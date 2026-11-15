@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-  Bell, Building2, ChevronsLeft, ClipboardCheck, ChevronsRight, CreditCard, GitBranch, LayoutDashboard, LogOut, Menu, ScrollText, Search, ShieldCheck, Users, X,
+  Bell, Building2, ChevronsLeft, ClipboardCheck, ChevronsRight, CreditCard, GitBranch, LayoutDashboard, LogOut, Menu, ScrollText, Search, ShieldCheck, Truck, Users, X,
 } from "lucide-react";
 import { logout, markNotificationsRead } from "@/app/actions";
 import { cn, timeAgo } from "@/lib/utils";
@@ -24,12 +24,13 @@ export interface ShellUser {
   officeCode: string | null;
   canViewUsers: boolean;
   canViewRoles: boolean;
+  canViewFleet: boolean;
 }
 export interface ShellNotification { id: string; title: string; body: string; read: boolean; at: string }
 
 type NavItem = { label: string; href: string; icon: React.ElementType; ready: boolean };
 
-function navFor(scope: ShellUser["scope"], canViewUsers: boolean, canViewRoles: boolean): NavItem[] {
+function navFor(scope: ShellUser["scope"], canViewUsers: boolean, canViewRoles: boolean, canViewFleet: boolean): NavItem[] {
   const dash: NavItem = { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard, ready: true };
   if (scope === "system") {
     return [dash,
@@ -39,6 +40,7 @@ function navFor(scope: ShellUser["scope"], canViewUsers: boolean, canViewRoles: 
       { label: "Subscriptions", href: "/dashboard/subscriptions", icon: CreditCard, ready: true },
       ...(canViewUsers ? [{ label: "Users", href: "/dashboard/users", icon: Users, ready: true }] : []),
       ...(canViewRoles ? [{ label: "Roles", href: "/dashboard/roles", icon: ShieldCheck, ready: true }] : []),
+      ...(canViewFleet && scope !== "system" ? [{ label: "Fleet", href: "/dashboard/fleet", icon: Truck, ready: true }] : []),
       { label: "Audit logs", href: "/dashboard/audit", icon: ScrollText, ready: false }];
   }
   if (scope === "head")
@@ -46,13 +48,15 @@ function navFor(scope: ShellUser["scope"], canViewUsers: boolean, canViewRoles: 
       { label: "Branches", href: "/dashboard/branches", icon: GitBranch, ready: true },
       ...(canViewUsers ? [{ label: "Users", href: "/dashboard/users", icon: Users, ready: true }] : []),
       ...(canViewRoles ? [{ label: "Roles", href: "/dashboard/roles", icon: ShieldCheck, ready: true }] : []),
+      ...(canViewFleet ? [{ label: "Fleet", href: "/dashboard/fleet", icon: Truck, ready: true }] : []),
       { label: "Audit logs", href: "/dashboard/audit", icon: ScrollText, ready: false }];
-  return [dash, ...(canViewUsers ? [{ label: "Team", href: "/dashboard/users", icon: Users, ready: true }] : [])];
+  return [dash, ...(canViewUsers ? [{ label: "Team", href: "/dashboard/users", icon: Users, ready: true }] : []),
+    ...(canViewFleet ? [{ label: "Fleet", href: "/dashboard/fleet", icon: Truck, ready: true }] : [])];
 }
 
 export function AppShell({ user, notifications, children }: { user: ShellUser; notifications: ShellNotification[]; children: React.ReactNode }) {
   const pathname = usePathname();
-  const nav = navFor(user.scope, user.canViewUsers, user.canViewRoles);
+  const nav = navFor(user.scope, user.canViewUsers, user.canViewRoles, user.canViewFleet);
   const [collapsed, setCollapsed] = useState(false);
   const [drawer, setDrawer] = useState(false);
   const [palette, setPalette] = useState(false);
